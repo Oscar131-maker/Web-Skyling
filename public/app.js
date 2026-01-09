@@ -444,4 +444,18 @@ ${limitations}`;
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
     });
+
+    // Logout
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            if (!confirm("¿Cerrar sesión?")) return;
+            try {
+                await fetch('/api/logout', { method: 'POST' });
+                window.location.reload();
+            } catch (e) {
+                console.error("Logout error", e);
+            }
+        });
+    }
 });

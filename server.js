@@ -6,20 +6,89 @@ const path = require('path');
 const pdf = require('pdf-parse');
 const OpenAI = require('openai');
 const { Pool } = require('pg');
+const session = require('express-session');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Security: Session Configuration
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'skyling_secret_key_change_me',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production', // true for https
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+}));
+
+// Trust proxy if behind Railway load balancer (required for secure cookies)
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+}
+
 // Logging Middleware
 app.use((req, res, next) => {
     const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] ${req.method} ${req.url}`);
+    console.log(`[${timestamp}] ${req.method} ${req.url} [Auth: ${!!req.session.user}]`);
     next();
 });
 
 app.use(cors());
 app.use(bodyParser.json({ limit: '50mb' }));
+
+// Auth Middleware Logic
+const requireAuth = (req, res, next) => {
+    if (req.session && req.session.user) {
+        return next();
+    }
+    // If API request, 401. If Page request, redirect/serve login.
+    if (req.path.startsWith('/api/')) {
+        return res.status(401).json({ error: "Unauthorized" });
+    }
+    // Serve login for non-API requests (static files check comes later if we modify order, 
+    // but better to intercept explicitly or use specific routes)
+    // Actually, express.static is below. We need to handle this carefully.
+    // Let's use a specific handler just for root or protect static middleware.
+    return res.sendFile(path.join(__dirname, 'public', 'login.html'));
+};
+
+const publicRoutes = ['/api/login', '/login.html', '/style.css', '/favicon.ico']; // Add basics if needed
+
+// Intercept requests
+app.use((req, res, next) => {
+    if (publicRoutes.includes(req.path)) {
+        return next();
+    }
+    // Check auth
+    if (req.session.user) {
+        return next();
+    }
+
+    // Allow login.html to be served if requesting root and not logged in
+    if (req.path === '/' || req.path === '/index.html') {
+        return res.sendFile(path.join(__dirname, 'public', 'login.html'));
+    }
+
+    // Block other static assets if strict (security), but styles might be needed for login?
+    // User asked for styles in login.html -> they link to style.css. So style.css MUST be public.
+    // app.js probably shouldn't be publicly served if it contains logic, but it's client side code.
+    // Let's be safe: Allow style.css.
+
+    // For API calls
+    if (req.path.startsWith('/api/')) {
+        return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // For everything else (authed static files), require auth
+    // If we are here, we are not authed and not asking for public routes.
+    // Redirect to root (which serves login)
+    return res.redirect('/');
+});
+
+
 app.use(express.static('public'));
 
 // Database Connection
@@ -130,6 +199,37 @@ const initDB = async () => {
 
 // Run Init
 initDB();
+
+
+// --- AUTH ENDPOINTS ---
+
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+
+    // Secure comparison (simple for now, assumed env vars)
+    const validUser = process.env.USER_USERNAME;
+    const validPass = process.env.USER_PASSWORD;
+
+    if (!validUser || !validPass) {
+        console.error("Server Misconfiguration: Missing USER_USERNAME or USER_PASSWORD in env");
+        return res.status(500).json({ error: "Server Auth Config Error" });
+    }
+
+    if (username === validUser && password === validPass) {
+        req.session.user = { username };
+        return res.json({ success: true });
+    }
+
+    return res.status(401).json({ error: "Invalid credentials" });
+});
+
+app.post('/api/logout', (req, res) => {
+    req.session.destroy(err => {
+        if (err) return res.status(500).json({ error: "Logout failed" });
+        res.clearCookie('connect.sid');
+        res.json({ success: true });
+    });
+});
 
 
 // --- API ENDPOINTS ---
@@ -337,4 +437,7 @@ app.post('/api/generate', async (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
+    if (!process.env.USER_USERNAME || !process.env.USER_PASSWORD) {
+        console.warn("WARNING: LOGIN CREDENTIALS NOT SET IN .ENV (USER_USERNAME, USER_PASSWORD)");
+    }
 });
