@@ -1,0 +1,37 @@
+### Top heroe
+H1: copia textual, sin alteraciones
+H2: 80 caracteres como mínimo - 100 caracteres como máximo
+P: 100 caracteres como mínimo - 120 caracteres como máximo
+CTA: 15 caracteres
+
+### Grid de beneficios
+H2: 80 caracteres como mínimo - 100 caracteres como máximo
+H3 corto: 40 caracteres como mínimo - 60 caracteres como máximo
+CTA: 100 caracteres como mínimo - 120 caracteres como máximo
+
+### Sección de planteamiento de problemas/Sección de solución
+H2: 80 caracteres como mínimo - 100 caracteres como máximo
+P: 250 caracteres como mínimo - 300 caracteres como máximo
+P: 250 caracteres como mínimo - 300 caracteres como máximo
+CTA: 15 caracteres
+
+### Sección de CTA
+H2: 80 caracteres como mínimo - 100 caracteres como máximo
+P: 60 caracteres como mínimo - 70 caracteres como máximo
+CTA: 15 caracteres
+
+### Sección de procesos/metodología
+H2: 80 caracteres como mínimo - 100 caracteres como máximo
+H3: 80 caracteres como mínimo - 100 caracteres como máximo
+P: 200 caracteres como mínimo - 250 caracteres como máximo
+
+### Sección “acerca de”
+H2: 80 caracteres como mínimo - 100 caracteres como máximo
+P: 250 caracteres como mínimo - 300 caracteres como máximo
+P: 250 caracteres como mínimo - 300 caracteres como máximo
+CTA: 15 carecteres
+
+### Portafolio/Testimonios
+H2: 80 caracteres como mínimo - 100 caracteres como máximo
+### Preguntas frecuentes
+H2: 80 caracteres como mínimo - 100 caracteres como máximo

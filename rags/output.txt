@@ -1,0 +1,66 @@
+Estructura:
+### Top heroe
+H1: [Palabra clave principal]
+H2: [Headline]
+P: [Sub-headline]
+A: [CTA]
+### Grid de beneficios
+H2: [Headline introduciendo a la sección de beneficios]
+H3: [Título corto]
+P: [párrafo corto]
+H3: [Título corto]
+P: [párrafo corto]
+H3: [Título corto]
+P: [párrafo corto]
+H3: [Título corto]
+P: [párrafo corto]
+H3: [Título corto]
+P: [párrafo corto]
+H3: [Título corto]
+P: [párrafo corto]
+### Sección de planteamiento de problemas/Sección de solución
+H2: [Headline]
+P: [Párrafo]
+P: [Párrafo]
+A: [CTA]
+### Sección de CTA
+H2: [Headline]
+P: [Párrafo]
+A: [CTA]
+### Sección de procesos/metodología
+H2: [Headline]
+SPAN: [01]
+H3: [Título corto]
+P: [Párrafo]
+SPAN: [02]
+H3: [Título corto]
+P: [Párrafo]
+SPAN: [03]
+H3: [Título corto]
+P: [Párrafo]
+SPAN: [04]
+H3: [Título corto]
+P: [Párrafo]
+SPAN: [05]
+H3: [Título corto]
+P: [Párrafo]
+...
+SPAN: [07]
+H3: [Título corto]
+P: [Párrafo]
+### Sección “acerca de”
+H2: [Headline]
+P: [Párrafo]
+P: [Párrafo]
+A: [CTA]
+### Sección de portafolio
+H2: [Headline]
+### Sección de testimonios
+H2: [Headline]
+### Sección de preguntas frecuentes
+H2: [Headline]
+### Sección de CTA FINAL
+H2: [Headline]
+P: [Párrafo]
+A: [CTA]
+NOTA: en el output final no debes devolver ningún análisis ni nada por el estilo, solo los textos en función del wireframe que te solicita el usuario.
