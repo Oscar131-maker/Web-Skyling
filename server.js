@@ -394,7 +394,7 @@ app.post('/api/generate', async (req, res) => {
         res.setHeader('Transfer-Encoding', 'chunked');
 
         const stream = await openai.chat.completions.create({
-            model: "anthropic/claude-sonnet-4.5",
+            model: "anthropic/claude-sonnet-4.6",
             messages: [
                 { role: "system", content: systemPrompt },
                 { role: "user", content: userMessage }
