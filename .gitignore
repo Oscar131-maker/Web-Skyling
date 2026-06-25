@@ -2,7 +2,6 @@
 node_modules/
 pnpm-lock.yaml
 yarn.lock
-package-lock.json
 
 # Environment Variables (CRITICAL)
 .env
@@ -46,6 +45,9 @@ coverage/
 
 # Optional: if you don't want the local PDF extractor script
 extract_pdf.py
+
+# Temporary uploads
+uploads/
 
 # Keep these for seeding, but ignore if you consider them sensitive (unlikely for templates)
 # rags/

@@ -5,141 +5,148 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web Skyling - Landing Page Text Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <header>
-        <div class="brand">
-            <h1>Web Skyling</h1>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="brand">
+                <img src="/logotipo.png" alt="Web Skyling" class="brand-logo">
+            </div>
+            <div class="sidebar-header-actions">
+                <button id="settings-btn" class="btn-icon" title="Configuración">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.004.827c-.292.24-.437.613-.43.992a6.759 6.759 0 0 1 0 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.759 6.759 0 0 1 0-.255c.007-.378-.138-.75-.43-.99l-1.005-.828a1.125 1.125 0 0 1-.26-1.43l1.298-2.247a1.125 1.125 0 0 1 1.369-.491l1.217.456c.355.133.75.072 1.076-.124.129-.075.256-.15.22-.128.331-.183.581-.495.644-.869l.214-1.281Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                    </svg>
+                </button>
+                <button id="sidebar-toggle" class="btn-icon" title="Contraer/expandir barra">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                    </svg>
+                </button>
+            </div>
         </div>
 
-        <div class="template-manager">
-            <div class="input-wrapper">
-                <select id="template-select">
-                    <option value="">-- Mis Plantillas --</option>
-                </select>
-            </div>
+        <div class="sidebar-content">
+            <section class="sidebar-section">
+                <div class="section-header">
+                    <h2>Historial</h2>
+                    <button id="new-history-btn" class="btn-icon-sm" title="Nueva sesión">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                    </button>
+                </div>
+                <ul id="history-list" class="history-list">
+                    <li class="history-empty">Aún no hay historial</li>
+                </ul>
+            </section>
 
-            <div class="actions-group">
-                <input type="text" id="template-name-input" placeholder="Nombre de plantilla...">
+        </div>
 
-                <button id="save-template-btn" class="btn-primary" title="Guardar cambios">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                        stroke="currentColor" class="size-6">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
-                    </svg>
-                </button>
-
-                <div class="divider-v"></div>
-
-                <button id="new-template-btn" class="btn-secondary" title="Crear nueva limpia">Nueva plantilla</button>
-
-                <button id="rename-template-btn" class="btn-secondary" title="Renombrar actual" disabled>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                        stroke="currentColor" class="size-6">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
-                    </svg>
-                </button>
-
-                <button id="delete-template-btn" class="btn-danger" title="Eliminar actual" disabled>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                        stroke="currentColor" class="size-6">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                    </svg>
-                </button>
-            </div>
-
-            <button id="logout-btn" class="btn-secondary" style="margin-left: 1rem;" title="Cerrar Sessión">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                    stroke="currentColor" class="size-6" style="width: 20px; height: 20px;">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
+        <div class="sidebar-footer">
+            <button id="logout-btn" class="btn-secondary">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
                 </svg>
-
+                <span>Cerrar sesión</span>
             </button>
         </div>
-    </header>
+        <div class="sidebar-resize-handle" id="sidebar-resize-handle"></div>
+    </aside>
 
-    <div class="main-container">
-        <!-- Column 1 -->
-        <div class="column">
-            <div class="input-group">
-                <label class="section-title">Palabra Clave</label>
-                <input type="text" id="keyword-input" placeholder="Ej. Diseño Web Corporativo">
+    <!-- Main Workspace -->
+    <main class="workspace" id="workspace">
+        <header class="workspace-header">
+            <h2>Generador de landing page</h2>
+            <p class="workspace-subtitle">Estructura, brief y texto en un solo flujo.</p>
+        </header>
+
+        <div class="main-container">
+            <!-- Column 1 -->
+            <div class="column">
+                <div class="input-group">
+                    <label class="section-title">Palabra Clave</label>
+                    <input type="text" id="keyword-input" placeholder="Ej. Diseño Web Corporativo">
+                </div>
+
+                <div class="input-group" style="flex-grow: 1; display: flex; flex-direction: column;">
+                    <label class="section-title">Brief del cliente</label>
+                    <textarea id="client-brief" style="flex-grow: 1;" placeholder="Pegar info del cliente aquí..."></textarea>
+                </div>
+
+                <button id="view-query-btn" class="btn-primary" style="width: 100%;">Ver consulta</button>
             </div>
 
-            <div class="input-group" style="flex-grow: 1; display: flex; flex-direction: column;">
-                <label class="section-title">Brief del cliente</label>
-                <textarea id="client-brief" style="flex-grow: 1;"
-                    placeholder="Pegar info del cliente aquí..."></textarea>
+            <!-- Column 2 -->
+            <div class="column">
+                <div class="input-group" style="flex-grow: 1; display: flex; flex-direction: column;">
+                    <div class="field-label-row">
+                        <label class="section-title">Estructura</label>
+                        <button class="btn-edit-field" data-field="structure" data-label="Estructura" data-hint="Define las secciones y el orden de la landing page.">Editar</button>
+                    </div>
+                    <textarea id="structure-input" class="col-2-textarea"></textarea>
+                </div>
+
+                <div class="input-group" style="flex-grow: 1; display: flex; flex-direction: column;">
+                    <div class="field-label-row">
+                        <label class="section-title">Output</label>
+                        <button class="btn-edit-field" data-field="output" data-label="Output" data-hint="Especifica el formato y estructura del texto generado.">Editar</button>
+                    </div>
+                    <textarea id="output-input" class="col-2-textarea"></textarea>
+                </div>
+
+                <div class="input-group" style="flex-grow: 1; display: flex; flex-direction: column;">
+                    <div class="field-label-row">
+                        <label class="section-title">Limitaciones</label>
+                        <button class="btn-edit-field" data-field="limitations" data-label="Limitaciones" data-hint="Define los límites de caracteres por sección.">Editar</button>
+                    </div>
+                    <textarea id="limitations-input" class="col-2-textarea"></textarea>
+                </div>
+
+                <div class="generate-btn-div">
+                    <button id="generate-btn" class="btn-primary" style="width: 100%;">Generar texto</button>
+                </div>
             </div>
 
-            <button id="view-query-btn" class="btn-primary" style="width: 100%;">Ver consulta</button>
+            <!-- Column 3 -->
+            <div class="column">
+                <div class="output-controls">
+                    <div class="model-selector">
+                        <label for="model-select">Modelo</label>
+                        <select id="model-select">
+                            <option value="anthropic/claude-sonnet-4.6">Claude Sonnet 4.6</option>
+                            <option value="anthropic/claude-opus-4.6">Claude Opus 4.6</option>
+                            <option value="anthropic/claude-opus-4.8">Claude Opus 4.8</option>
+                            <option value="anthropic/claude-opus-4.8-fast">Claude Opus 4.8 Fast</option>
+                            <option value="anthropic/claude-sonnet-4.5">Claude Sonnet 4.5</option>
+                        </select>
+                    </div>
+                    <button id="copy-btn" class="btn-secondary" title="Copiar resultado">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
+                        </svg>
+                    </button>
+                    <button id="download-btn" class="btn-primary" title="Descargar resultado">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="full-height">
+                    <label class="section-title">Texto final</label>
+                    <textarea id="final-output" readonly placeholder="El resultado de la API aparecerá aquí..."></textarea>
+                </div>
+            </div>
         </div>
-
-        <!-- Column 2 -->
-        <div class="column">
-            <div class="edit-sistem-prompt-div">
-                <button id="edit-system-prompt-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                        stroke="currentColor" class="size-6">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
-                    </svg>
-                    Editar SystemPrompt
-                </button>
-            </div>
-
-            <div class="input-group" style="flex-grow: 1; display: flex; flex-direction: column;">
-                <label class="section-title">Estructura</label>
-                <textarea id="structure-input" class="col-2-textarea"></textarea>
-            </div>
-
-            <div class="input-group" style="flex-grow: 1; display: flex; flex-direction: column;">
-                <label class="section-title">Output</label>
-                <textarea id="output-input" class="col-2-textarea"></textarea>
-            </div>
-
-            <div class="input-group" style="flex-grow: 1; display: flex; flex-direction: column;">
-                <label class="section-title">Limitaciones</label>
-                <textarea id="limitations-input" class="col-2-textarea"></textarea>
-            </div>
-
-            <div class="generate-btn-div">
-                <button id="generate-btn" class="btn-primary" style="width: 100%; margin-top: 1rem;">Generar
-                    texto</button>
-            </div>
-
-        </div>
-
-        <!-- Column 3 -->
-        <div class="column">
-            <div class="output-controls">
-                <button id="copy-btn" class="btn-secondary">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                        stroke="currentColor" class="size-6">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
-                    </svg>
-                </button>
-                <button id="download-btn" class="btn-primary"><svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                    </svg>
-                </button>
-            </div>
-            <div class="full-height">
-                <label class="section-title">Texto final</label>
-                <textarea id="final-output" readonly placeholder="El resultado de la API aparecerá aquí..."></textarea>
-            </div>
-        </div>
-    </div>
+    </main>
 
     <!-- Modal for Query Preview -->
     <div class="modal-overlay" id="query-modal">
@@ -155,24 +162,98 @@
     <!-- Custom Notification Container -->
     <div id="notification-container"></div>
 
-    <!-- Modal for System Prompt Edit -->
-    <div class="modal-overlay" id="system-prompt-modal">
-        <div class="modal-content"
-            style="max-width: 800px; width: 90%; height: 80vh; display: flex; flex-direction: column;">
+    <!-- Modal for Settings -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal-content" style="max-width: 700px; width: 90%; height: 85vh; display: flex; flex-direction: column;">
             <div class="modal-header">
-                <h3>Editar System Prompt</h3>
-                <button class="modal-close" id="close-system-prompt-modal">&times;</button>
+                <h3>Configuración</h3>
+                <button class="modal-close" id="close-settings-modal">&times;</button>
             </div>
-            <div class="modal-body" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden;">
-                <textarea id="system-prompt-editor"
-                    style="flex-grow: 1; width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-family: monospace; resize: none; margin-bottom: 1rem;"></textarea>
-                <div style="display: flex; justify-content: flex-end; gap: 1rem;">
-                    <button id="cancel-system-prompt-btn" class="btn-secondary">Cancelar</button>
-                    <button id="save-system-prompt-btn" class="btn-primary">Guardar Prompt</button>
+            <div class="modal-body" style="flex-grow: 1; overflow-y: auto; padding: 1.5rem;">
+                <div class="settings-block">
+                    <label class="settings-label">System Prompt</label>
+                    <p class="settings-hint">Puedes editar el prompt base o restablecer el original.</p>
+                    <textarea id="system-prompt-editor"></textarea>
+                    <div class="settings-block-actions">
+                        <button id="reset-system-prompt-btn" class="btn-secondary">Restablecer original</button>
+                        <button id="save-system-prompt-btn" class="btn-primary">Guardar System Prompt</button>
+                    </div>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <div class="settings-block">
+                    <label class="settings-label">Archivo de conocimiento</label>
+                    <p class="settings-hint">Sube un archivo .pdf, .txt, .docx o .md para enriquecer el contexto del modelo.</p>
+                    <div id="knowledge-dropzone" class="dropzone">
+                        <input type="file" id="knowledge-file-input" accept=".pdf,.txt,.docx,.md">
+                        <div class="dropzone-prompt">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
+                            </svg>
+                            <span>Arrastra o selecciona un archivo</span>
+                            <small>.pdf · .txt · .docx · .md</small>
+                        </div>
+                    </div>
+                    <div class="knowledge-meta">
+                        <span id="current-knowledge-name">Cargando...</span>
+                        <div class="knowledge-meta-actions">
+                            <button id="download-knowledge-btn" class="btn-link" type="button" title="Descargar archivo de conocimiento">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:14px;height:14px;vertical-align:middle;margin-right:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                                Descargar .txt
+                            </button>
+                            <button id="reset-knowledge-btn" class="btn-link" type="button">Restablecer original</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Modal for Logs -->
+    <div class="modal-overlay" id="logs-modal">
+        <div class="modal-content" style="max-width: 900px; width: 90%; height: 80vh; display: flex; flex-direction: column;">
+            <div class="modal-header">
+                <h3>Logs</h3>
+                <button class="modal-close" id="close-logs-modal">&times;</button>
+            </div>
+            <div class="modal-body" style="flex-grow: 1; overflow: hidden; padding: 0;">
+                <div id="logs-container" class="logs-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Field Editor (Estructura / Output / Limitaciones) -->
+    <div class="modal-overlay" id="field-editor-modal">
+        <div class="modal-content field-editor-content">
+            <div class="modal-header">
+                <h3 id="field-editor-title">Editar campo</h3>
+                <button class="modal-close" id="close-field-editor">&times;</button>
+            </div>
+            <div class="field-editor-body">
+                <p class="field-editor-hint" id="field-editor-hint"></p>
+                <textarea id="field-editor-textarea" spellcheck="false"></textarea>
+            </div>
+            <div class="field-editor-footer">
+                <button id="field-editor-reset" class="btn-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
+                    Restablecer original
+                </button>
+                <div class="field-editor-footer-right">
+                    <button id="field-editor-cancel" class="btn-secondary">Cancelar</button>
+                    <button id="field-editor-save" class="btn-primary">Guardar cambios</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Logs Button -->
+    <button id="logs-btn" class="fab-logs" title="Ver logs">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+        </svg>
+        <span>Logs</span>
+    </button>
 
     <script src="app.js"></script>
 </body>

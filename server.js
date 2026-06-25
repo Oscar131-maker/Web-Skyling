@@ -4,9 +4,11 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
 const pdf = require('pdf-parse');
+const mammoth = require('mammoth');
 const OpenAI = require('openai');
 const { Pool } = require('pg');
 const session = require('express-session');
+const multer = require('multer');
 require('dotenv').config();
 
 const app = express();
@@ -38,6 +40,26 @@ app.use((req, res, next) => {
 
 app.use(cors());
 app.use(bodyParser.json({ limit: '50mb' }));
+
+// File upload configuration
+const upload = multer({
+    dest: path.join(__dirname, 'uploads'),
+    limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+    fileFilter: (req, file, cb) => {
+        const allowedExtensions = ['.pdf', '.txt', '.docx', '.md'];
+        const ext = path.extname(file.originalname).toLowerCase();
+        if (allowedExtensions.includes(ext)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Solo se permiten archivos .pdf, .txt, .docx o .md'));
+        }
+    }
+});
+
+// Ensure uploads directory exists
+if (!fs.existsSync(path.join(__dirname, 'uploads'))) {
+    fs.mkdirSync(path.join(__dirname, 'uploads'));
+}
 
 // Auth Middleware Logic
 const requireAuth = (req, res, next) => {
@@ -92,10 +114,27 @@ app.use((req, res, next) => {
 app.use(express.static('public'));
 
 // Database Connection
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+let pool;
+if (process.env.DATABASE_URL && process.env.USE_PG_MEM !== 'true') {
+    pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    });
+} else {
+    // Local development fallback: in-memory PostgreSQL-compatible database
+    const { newDb, DataType } = require('pg-mem');
+    const db = newDb();
+    db.public.registerFunction({
+        name: 'version',
+        args: [],
+        returns: DataType.text,
+        impure: true,
+        implementation: () => 'PostgreSQL 15.0'
+    });
+    const { Pool } = db.adapters.createPg();
+    pool = new Pool();
+    console.log("Using in-memory PostgreSQL for local development (pg-mem)");
+}
 
 // Helper to read file safely
 const readFile = (filePath) => {
@@ -107,6 +146,60 @@ const readFile = (filePath) => {
     } catch (e) {
         console.error(`Error reading ${filePath}:`, e);
         return '';
+    }
+};
+
+// Helper to extract text from uploaded knowledge files
+const extractTextFromFile = async (filePath, originalName) => {
+    const ext = path.extname(originalName).toLowerCase();
+    try {
+        if (ext === '.pdf') {
+            const dataBuffer = fs.readFileSync(filePath);
+            const data = await pdf(dataBuffer);
+            return data.text;
+        } else if (ext === '.docx') {
+            const result = await mammoth.extractRawText({ path: filePath });
+            return result.value;
+        } else if (ext === '.txt' || ext === '.md') {
+            return fs.readFileSync(filePath, 'utf-8');
+        }
+        throw new Error('Formato no soportado');
+    } catch (e) {
+        console.error(`Error extracting text from ${originalName}:`, e);
+        throw e;
+    } finally {
+        // Clean up temp file
+        try {
+            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        } catch (cleanupErr) {
+            console.error("Error cleaning up uploaded file:", cleanupErr);
+        }
+    }
+};
+
+// Persistent logger backed by PostgreSQL
+const logToDB = async (level, message, meta = {}) => {
+    try {
+        await pool.query(
+            'INSERT INTO web_skyling_logs (level, message, meta) VALUES ($1, $2, $3)',
+            [level, message, JSON.stringify(meta)]
+        );
+    } catch (e) {
+        console.error('Failed to persist log:', e);
+    }
+};
+
+// Cap the log table to the last 200 entries
+const pruneLogs = async () => {
+    try {
+        await pool.query(`
+            DELETE FROM web_skyling_logs
+            WHERE id NOT IN (
+                SELECT id FROM web_skyling_logs ORDER BY created_at DESC LIMIT 200
+            )
+        `);
+    } catch (e) {
+        console.error('Failed to prune logs:', e);
     }
 };
 
@@ -131,6 +224,28 @@ const initDB = async () => {
             );
         `);
 
+        // Create History Table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS web_skyling_history (
+                id SERIAL PRIMARY KEY,
+                name TEXT NOT NULL,
+                data JSONB NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        // Create Logs Table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS web_skyling_logs (
+                id SERIAL PRIMARY KEY,
+                level TEXT NOT NULL,
+                message TEXT NOT NULL,
+                meta JSONB,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
         // Seed Config if empty
         const configCount = await pool.query('SELECT COUNT(*) FROM web_skyling_config');
         if (parseInt(configCount.rows[0].count) === 0) {
@@ -147,18 +262,18 @@ const initDB = async () => {
 
             // Knowledge logic
             const txtPath = path.join(baseDir, 'conocimiento_unico_sections.txt');
+            const pdfPath = path.join(baseDir, 'conocimiento_unico_sections.pdf');
             if (fs.existsSync(txtPath)) {
                 seedData['knowledge'] = fs.readFileSync(txtPath, 'utf-8');
-            } else {
-                const pdfPath = path.join(baseDir, 'conocimiento_unico_sections.pdf');
-                if (fs.existsSync(pdfPath)) {
-                    try {
-                        const dataBuffer = fs.readFileSync(pdfPath);
-                        const data = await pdf(dataBuffer);
-                        seedData['knowledge'] = data.text;
-                    } catch (e) {
-                        console.error("PDF Seed Error:", e);
-                    }
+                seedData['knowledgeSource'] = 'conocimiento_unico_sections.txt';
+            } else if (fs.existsSync(pdfPath)) {
+                try {
+                    const dataBuffer = fs.readFileSync(pdfPath);
+                    const data = await pdf(dataBuffer);
+                    seedData['knowledge'] = data.text;
+                    seedData['knowledgeSource'] = 'conocimiento_unico_sections.pdf';
+                } catch (e) {
+                    console.error("PDF Seed Error:", e);
                 }
             }
 
@@ -243,8 +358,16 @@ app.get('/api/defaults', async (req, res) => {
             config[row.key] = row.value;
         });
 
-        // Return config, but frontend expects keys: structure, output, limitations, systemPrompt, knowledge
-        // Our keys stored match these names (see seedData).
+        // Ensure knowledge source metadata is present
+        if (!config.knowledgeSource) {
+            const txtPath = path.join(__dirname, 'rags', 'conocimiento_unico_sections.txt');
+            const pdfPath = path.join(__dirname, 'rags', 'conocimiento_unico_sections.pdf');
+            if (fs.existsSync(txtPath)) {
+                config.knowledgeSource = 'conocimiento_unico_sections.txt';
+            } else if (fs.existsSync(pdfPath)) {
+                config.knowledgeSource = 'conocimiento_unico_sections.pdf';
+            }
+        }
 
         res.json(config);
     } catch (e) {
@@ -267,6 +390,209 @@ app.put('/api/config', async (req, res) => {
     } catch (e) {
         console.error("Error updating config:", e);
         res.status(500).json({ error: "Database error updating config" });
+    }
+});
+
+// Reset a specific field to its original RAG file value
+app.post('/api/reset-field', async (req, res) => {
+    const { key } = req.body;
+    const fieldToFile = {
+        structure: 'estructura.txt',
+        output: 'output.txt',
+        limitations: 'limitaciones.txt',
+        systemPrompt: 'systemprompt.txt'
+    };
+    if (!fieldToFile[key]) {
+        return res.status(400).json({ error: 'Campo no válido' });
+    }
+    try {
+        const filePath = path.join(__dirname, 'rags', fieldToFile[key]);
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ error: 'Archivo original no encontrado' });
+        }
+        const originalValue = fs.readFileSync(filePath, 'utf-8');
+        await pool.query(
+            'INSERT INTO web_skyling_config (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = $2',
+            [key, originalValue]
+        );
+        await logToDB('info', `Field reset to original: ${key}`);
+        res.json({ success: true, key, value: originalValue });
+    } catch (e) {
+        console.error("Error resetting field:", e);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
+// History CRUD
+
+app.get('/api/history', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM web_skyling_history ORDER BY updated_at DESC');
+        res.json(result.rows);
+    } catch (e) {
+        console.error("Error fetching history:", e);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
+app.post('/api/history', async (req, res) => {
+    const { name, data } = req.body;
+    if (!name) return res.status(400).json({ error: "Name is required" });
+
+    try {
+        const result = await pool.query(
+            'INSERT INTO web_skyling_history (name, data) VALUES ($1, $2) RETURNING *',
+            [name, JSON.stringify(data)]
+        );
+        await logToDB('info', 'History item created', { id: result.rows[0].id, name });
+        res.json({ success: true, item: result.rows[0] });
+    } catch (e) {
+        console.error("Error creating history:", e);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
+app.put('/api/history/:id', async (req, res) => {
+    const id = req.params.id;
+    const { name, data } = req.body;
+
+    try {
+        const updates = [];
+        const values = [];
+        let idx = 1;
+
+        if (name !== undefined) {
+            updates.push(`name = $${idx++}`);
+            values.push(name);
+        }
+        if (data !== undefined) {
+            updates.push(`data = $${idx++}`);
+            values.push(JSON.stringify(data));
+        }
+        updates.push(`updated_at = CURRENT_TIMESTAMP`);
+        values.push(id);
+
+        const query = `UPDATE web_skyling_history SET ${updates.join(', ')} WHERE id = $${idx} RETURNING *`;
+        const result = await pool.query(query, values);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "History item not found" });
+        }
+
+        await logToDB('info', 'History item updated', { id, name });
+        res.json({ success: true, item: result.rows[0] });
+    } catch (e) {
+        console.error("Error updating history:", e);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
+app.delete('/api/history/:id', async (req, res) => {
+    const id = req.params.id;
+    try {
+        await pool.query('DELETE FROM web_skyling_history WHERE id = $1', [id]);
+        await logToDB('info', 'History item deleted', { id });
+        res.json({ success: true });
+    } catch (e) {
+        console.error("Error deleting history:", e);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
+// Knowledge upload
+app.post('/api/upload-knowledge', upload.single('knowledgeFile'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "No se recibió ningún archivo" });
+        }
+
+        const extractedText = await extractTextFromFile(req.file.path, req.file.originalname);
+        if (!extractedText) {
+            return res.status(400).json({ error: "No se pudo extraer texto del archivo" });
+        }
+
+        await pool.query(
+            'INSERT INTO web_skyling_config (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = $2',
+            ['knowledge', extractedText]
+        );
+        await pool.query(
+            'INSERT INTO web_skyling_config (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = $2',
+            ['knowledgeFileName', req.file.originalname]
+        );
+
+        await logToDB('info', 'Knowledge file uploaded', { fileName: req.file.originalname });
+        res.json({ success: true, fileName: req.file.originalname });
+    } catch (e) {
+        console.error("Upload knowledge error:", e);
+        await logToDB('error', 'Knowledge upload failed', { message: e.message });
+        res.status(500).json({ error: e.message || "Error al procesar el archivo" });
+    }
+});
+
+// Reset knowledge to original file
+app.post('/api/reset-knowledge', async (req, res) => {
+    try {
+        const baseDir = path.join(__dirname, 'rags');
+        const txtPath = path.join(baseDir, 'conocimiento_unico_sections.txt');
+        const pdfPath = path.join(baseDir, 'conocimiento_unico_sections.pdf');
+
+        let knowledge = '';
+        let fileName = '';
+
+        if (fs.existsSync(txtPath)) {
+            knowledge = fs.readFileSync(txtPath, 'utf-8');
+            fileName = 'conocimiento_unico_sections.txt';
+        } else if (fs.existsSync(pdfPath)) {
+            const dataBuffer = fs.readFileSync(pdfPath);
+            const data = await pdf(dataBuffer);
+            knowledge = data.text;
+            fileName = 'conocimiento_unico_sections.pdf';
+        } else {
+            return res.status(404).json({ error: "No se encontró el archivo de conocimiento original" });
+        }
+
+        await pool.query(
+            'INSERT INTO web_skyling_config (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = $2',
+            ['knowledge', knowledge]
+        );
+        await pool.query(
+            'INSERT INTO web_skyling_config (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = $2',
+            ['knowledgeFileName', fileName]
+        );
+
+        await logToDB('info', 'Knowledge reset to original', { fileName });
+        res.json({ success: true, fileName });
+    } catch (e) {
+        console.error("Reset knowledge error:", e);
+        await logToDB('error', 'Knowledge reset failed', { message: e.message });
+        res.status(500).json({ error: e.message || "Error al restablecer el conocimiento" });
+    }
+});
+
+// Client logs endpoint
+app.post('/api/log', async (req, res) => {
+    const { level, message, meta } = req.body;
+    if (!level || !message) return res.status(400).json({ error: "Level and message are required" });
+
+    try {
+        await logToDB(level, message, meta || {});
+        await pruneLogs();
+        res.json({ success: true });
+    } catch (e) {
+        console.error("Error saving client log:", e);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
+app.get('/api/logs', async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM web_skyling_logs ORDER BY created_at DESC LIMIT 100'
+        );
+        res.json(result.rows);
+    } catch (e) {
+        console.error("Error fetching logs:", e);
+        res.status(500).json({ error: "Database error" });
     }
 });
 
@@ -368,7 +694,10 @@ app.delete('/api/templates/:name', async (req, res) => {
 app.post('/api/generate', async (req, res) => {
     try {
         console.log("Received generation request (Streaming Mode - OpenRouter).");
-        const { systemPrompt, userMessage, apiKey } = req.body;
+        const { systemPrompt, userMessage, apiKey, model } = req.body;
+
+        const selectedModel = model || "anthropic/claude-sonnet-4.5";
+        await logToDB('info', 'Generation request received', { model: selectedModel });
 
         // Use provided key or env key
         let keyToUse = apiKey || process.env.ANTHROPIC_OPENROUTER_API_KEY;
@@ -394,7 +723,7 @@ app.post('/api/generate', async (req, res) => {
         res.setHeader('Transfer-Encoding', 'chunked');
 
         const stream = await openai.chat.completions.create({
-            model: "anthropic/claude-sonnet-4.6",
+            model: selectedModel,
             messages: [
                 { role: "system", content: systemPrompt },
                 { role: "user", content: userMessage }
@@ -423,8 +752,10 @@ app.post('/api/generate', async (req, res) => {
 
     } catch (e) {
         console.error("Generation Error:", e);
+        await logToDB('error', e.message, { status: e.status, model: selectedModel });
         if (e.status === 401) {
             console.error("Authentication Error: Double check your API Key.");
+            await logToDB('error', 'OpenRouter authentication error (401)', { model: selectedModel });
         }
         // If headers weren't sent yet, send JSON error.
         if (!res.headersSent) {
